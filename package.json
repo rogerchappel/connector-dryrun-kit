@@ -31,6 +31,15 @@
     "fixtures",
     "SKILL.md",
     "README.md",
-    "LICENSE"
-  ]
+    "LICENSE",
+    "examples",
+    "scripts",
+    "CHANGELOG.md",
+    "CONTRIBUTING.md",
+    "SECURITY.md"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rogerchappel/connector-dryrun-kit.git"
+  }
 }
