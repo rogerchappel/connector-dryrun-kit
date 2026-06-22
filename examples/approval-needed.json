@@ -1,0 +1,15 @@
+{
+  "name": "Support escalation draft",
+  "owner": "support-agent",
+  "summary": "Preview an outbound support message before approval.",
+  "actions": [
+    {
+      "id": "send-update",
+      "connector": "email",
+      "verb": "send",
+      "target": "customer:ticket-42",
+      "risk": "high",
+      "rollback": "Send a correction and record the incident in the ticket timeline."
+    }
+  ]
+}
