@@ -1,0 +1,25 @@
+{
+  "name": "CRM follow-up sync",
+  "owner": "agent-team",
+  "summary": "Preview a CRM note and project-management task before any external writes.",
+  "actions": [
+    {
+      "id": "crm-note",
+      "connector": "crm",
+      "verb": "create",
+      "target": "contact:acme-cto",
+      "risk": "medium",
+      "approver": "Roger",
+      "rollback": "Delete the note by id if the live execution is approved and later reversed."
+    },
+    {
+      "id": "pm-task",
+      "connector": "project-management",
+      "verb": "update",
+      "target": "project:launch-board",
+      "risk": "high",
+      "approver": "Roger",
+      "rollback": "Move the task back to inbox and add a correction comment."
+    }
+  ]
+}
