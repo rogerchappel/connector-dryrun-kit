@@ -1,0 +1,36 @@
+{
+  "name": "connector-dryrun-kit",
+  "version": "0.1.0",
+  "description": "Local-first connector action dry-run receipts for agent workflows.",
+  "type": "module",
+  "bin": {
+    "connector-dryrun": "./bin/connector-dryrun.js"
+  },
+  "scripts": {
+    "check": "node --check bin/connector-dryrun.js && node --check src/index.js",
+    "test": "node --test",
+    "smoke": "node bin/connector-dryrun.js fixtures/sample-plan.json --format markdown",
+    "validate": "bash scripts/validate.sh"
+  },
+  "keywords": [
+    "agents",
+    "connector",
+    "dry-run",
+    "approval",
+    "skill"
+  ],
+  "author": "Roger Chappel",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "files": [
+    "bin",
+    "src",
+    "docs",
+    "fixtures",
+    "SKILL.md",
+    "README.md",
+    "LICENSE"
+  ]
+}
