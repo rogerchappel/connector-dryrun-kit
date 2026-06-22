@@ -10,7 +10,8 @@
     "check": "node --check bin/connector-dryrun.js && node --check src/index.js",
     "test": "node --test",
     "smoke": "node bin/connector-dryrun.js fixtures/sample-plan.json --format markdown",
-    "validate": "bash scripts/validate.sh"
+    "validate": "bash scripts/validate.sh",
+    "package:smoke": "npm pack --dry-run"
   },
   "keywords": [
     "agents",
