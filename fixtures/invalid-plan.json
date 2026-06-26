@@ -1,0 +1,12 @@
+{
+  "name": "Incomplete sync",
+  "owner": "agent-team",
+  "actions": [
+    {
+      "id": "missing-connector",
+      "verb": "create",
+      "target": "contact:acme-cto",
+      "risk": "medium"
+    }
+  ]
+}
