@@ -58,5 +58,7 @@ npm run package:smoke
 ## Verification
 
 ```bash
+npm run lint
 npm test
+npm run release:check
 ```
