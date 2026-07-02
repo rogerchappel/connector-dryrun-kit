@@ -54,3 +54,9 @@ npm run package:smoke
 - V1 accepts JSON only.
 - Provider-specific schemas are intentionally not bundled.
 - This project creates evidence for approvals; it does not grant approvals.
+
+## Verification
+
+```bash
+npm test
+```
