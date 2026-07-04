@@ -9,10 +9,10 @@
 
 ## Verification
 
-- `npm run validate` - passed on 2026-06-22.
-- `npm run check` - passed through validation.
-- `npm test` - 3 tests passed.
-- `npm run smoke` - rendered the sample CRM/project-management dry-run receipt.
+- `npm run release:check` - pass; runs lint, 10 tests, markdown fixture smoke, schema validation, and asserted package smoke.
+- `npm run validate` - pass; validates the sample and invalid fixtures.
+- `npm test` - pass; covers CLI help/version, validation exit codes, missing actions, and deterministic JSON receipts.
+- `npm run smoke` - pass; renders the sample CRM/project-management dry-run receipt.
 
 ## Classification
 

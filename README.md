@@ -8,6 +8,7 @@
 npm install
 npm run smoke
 node bin/connector-dryrun.js fixtures/sample-plan.json --format json
+node bin/connector-dryrun.js --version
 ```
 
 Run the complete release candidate gate before publishing or cutting a release:
