@@ -30,6 +30,14 @@ test('prints help without treating it as an error', async () => {
   assert.equal(result.stderr, '');
 });
 
+test('prints the package version', async () => {
+  const result = await runCli(['--version']);
+
+  assert.equal(result.code, 0);
+  assert.match(result.stdout.trim(), /^\d+\.\d+\.\d+$/);
+  assert.equal(result.stderr, '');
+});
+
 test('renders json receipts from the fixture plan', async () => {
   const result = await runCli([validPlan, '--format', 'json']);
 
