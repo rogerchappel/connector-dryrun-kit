@@ -3,6 +3,8 @@
 ```bash
 connector-dryrun <plan.json> --format markdown
 connector-dryrun <plan.json> --format json
+connector-dryrun --help
+connector-dryrun --version
 ```
 
 Fixture-backed smoke commands:
@@ -11,6 +13,7 @@ Fixture-backed smoke commands:
 node bin/connector-dryrun.js fixtures/sample-plan.json --format markdown
 node bin/connector-dryrun.js fixtures/sample-plan.json --format json
 node bin/connector-dryrun.js fixtures/invalid-plan.json --format markdown
+node bin/connector-dryrun.js --version
 ```
 
 Exit codes:
