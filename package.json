@@ -10,7 +10,7 @@
     "check": "node --check bin/connector-dryrun.js && node --check src/index.js",
     "lint": "npm run check",
     "test": "node --test",
-    "smoke": "node bin/connector-dryrun.js fixtures/sample-plan.json --format markdown",
+    "smoke": "node bin/connector-dryrun.js --help && node bin/connector-dryrun.js --version && node bin/connector-dryrun.js fixtures/sample-plan.json --format markdown",
     "validate": "bash scripts/validate.sh",
     "package:smoke": "node scripts/package-smoke.js",
     "release:check": "npm run lint && npm run test && npm run smoke && npm run validate && npm run package:smoke"
