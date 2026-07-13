@@ -8,10 +8,12 @@
   },
   "scripts": {
     "check": "node --check bin/connector-dryrun.js && node --check src/index.js",
+    "lint": "npm run check",
     "test": "node --test",
-    "smoke": "node bin/connector-dryrun.js fixtures/sample-plan.json --format markdown",
-    "release:check": "bash scripts/validate.sh",
-    "validate": "bash scripts/validate.sh"
+    "smoke": "node bin/connector-dryrun.js --help && node bin/connector-dryrun.js --version && node bin/connector-dryrun.js fixtures/sample-plan.json --format markdown",
+    "validate": "bash scripts/validate.sh",
+    "package:smoke": "node scripts/package-smoke.js",
+    "release:check": "npm run lint && npm run test && npm run smoke && npm run validate && npm run package:smoke"
   },
   "keywords": [
     "agents",
@@ -41,8 +43,18 @@
     "SKILL.md",
     "README.md",
     "LICENSE",
-    "SECURITY.md",
+    "examples",
+    "scripts",
     "CHANGELOG.md",
-    "CONTRIBUTING.md"
-  ]
+    "CONTRIBUTING.md",
+    "SECURITY.md"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rogerchappel/connector-dryrun-kit.git"
+  },
+  "bugs": {
+    "url": "https://github.com/rogerchappel/connector-dryrun-kit/issues"
+  },
+  "homepage": "https://github.com/rogerchappel/connector-dryrun-kit#readme"
 }
