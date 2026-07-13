@@ -1,5 +1,8 @@
 # Changelog
 
+## [Unreleased]
+
+- Add release-readiness checks for package metadata, pack contents, and CI verification.
 ## Unreleased
 
 - Added fixture-backed CLI integration coverage for help, JSON receipts, validation exit codes, and unsupported output formats.
