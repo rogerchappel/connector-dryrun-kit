@@ -23,5 +23,8 @@ Exit codes:
 - `2`: receipt generated with validation errors.
 
 Warnings do not fail the command because a reviewer may still use the receipt to request missing approvals.
+Malformed plan shapes, including `null` plans, non-array `actions`, and non-object
+action entries, produce a receipt and exit `2`; malformed JSON or unreadable files
+exit `1`.
 
 Unsupported output formats fail before the plan is read, which keeps bad CLI invocations distinct from invalid receipt content.
