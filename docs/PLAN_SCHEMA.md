@@ -9,4 +9,11 @@ Every plan is a JSON object with:
 
 Each action should include `id`, `connector`, `verb`, `target`, `risk`, `approver`, `rollback`, and optional `notes`.
 
-Risk must be `low`, `medium`, or `high`. Unknown risks are treated as `high`.
+The plan must be a JSON object and `actions` must be an array of JSON objects.
+Malformed structures are rendered as receipt validation errors instead of causing a
+runtime exception.
+
+Verb and risk tokens are trimmed and lowercased before validation and approval
+decisions. For example, `UPDATE`, ` update `, and `update` are all rendered as
+`update` and require approval. Risk must normalize to `low`, `medium`, or `high`;
+unknown, missing, and non-string risks are treated conservatively as `high`.

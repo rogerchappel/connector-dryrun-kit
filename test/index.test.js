@@ -16,6 +16,50 @@ test('builds a receipt and detects approval needs', () => {
   assert.equal(receipt.warnings.length, 1);
 });
 
+test('normalizes supported verb and risk tokens before policy decisions', () => {
+  for (const verb of ['update', 'UPDATE', ' update ']) {
+    const receipt = buildReceipt({
+      name: 'demo',
+      owner: 'tester',
+      actions: [{ connector: 'crm', verb, target: 'contact:1', risk: ' LOW ' }]
+    });
+
+    assert.equal(receipt.actions[0].verb, 'update');
+    assert.equal(receipt.actions[0].risk, 'low');
+    assert.equal(receipt.actions[0].approvalRequired, true);
+    assert.equal(receipt.approvalRequired, true);
+    assert.equal(receipt.highestRisk, 'low');
+  }
+});
+
+test('treats unknown risk tokens conservatively', () => {
+  const receipt = buildReceipt({
+    name: 'demo',
+    owner: 'tester',
+    actions: [{ connector: 'crm', verb: 'read', target: 'contact:1', risk: 'urgent' }]
+  });
+
+  assert.equal(receipt.actions[0].risk, 'high');
+  assert.equal(receipt.approvalRequired, true);
+  assert.equal(receipt.highestRisk, 'high');
+});
+
+test('returns deterministic errors for malformed plans and actions', () => {
+  for (const plan of [null, [], 'plan']) {
+    const receipt = buildReceipt(plan);
+    assert.ok(receipt.errors.includes('Plan must be a JSON object.'));
+    assert.deepEqual(receipt.actions, []);
+  }
+
+  const missingActions = buildReceipt({ name: 'bad', owner: 'tester' });
+  assert.ok(missingActions.errors.includes('Plan actions must be an array.'));
+
+  const malformedAction = buildReceipt({ name: 'bad', owner: 'tester', actions: [null] });
+  assert.ok(malformedAction.errors.includes('Action 1 must be a JSON object.'));
+  assert.equal(malformedAction.actions[0].risk, 'high');
+  assert.equal(malformedAction.actions[0].approvalRequired, true);
+});
+
 test('reports missing connector fields as errors', () => {
   const receipt = buildReceipt({ name: 'bad', owner: 'tester', actions: [{ id: 'bad' }] });
   assert.ok(receipt.errors.some((error) => error.includes('missing connector')));

@@ -23,6 +23,10 @@ That command runs syntax checks, tests, CLI smoke fixtures, validation, and an n
 
 Plans are JSON files with `name`, `owner`, optional `summary`, and an `actions` array. Each action should include `id`, `connector`, `verb`, `target`, `risk`, `approver`, and `rollback`.
 
+Plans and actions must be JSON objects. Verb and risk tokens are trimmed and
+lowercased, so casing or surrounding whitespace does not change approval policy.
+Unknown risks are treated conservatively as `high`.
+
 ## CLI Examples
 
 Preview a valid connector plan as Markdown:
@@ -73,4 +77,3 @@ npm run build --if-present
 npm test --if-present
 npm run smoke --if-present
 ```
-

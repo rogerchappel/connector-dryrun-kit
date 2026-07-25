@@ -4,10 +4,14 @@ const writeVerbs = new Set(['create', 'update', 'delete', 'send', 'invite', 'arc
 export function buildReceipt(plan) {
   const errors = [];
   const warnings = [];
-  const actions = Array.isArray(plan.actions) ? plan.actions : [];
+  const validPlan = isRecord(plan);
+  const input = validPlan ? plan : {};
+  const actions = Array.isArray(input.actions) ? input.actions : [];
 
-  if (!plan.name) errors.push('Plan is missing name.');
-  if (!plan.owner) errors.push('Plan is missing owner.');
+  if (!validPlan) errors.push('Plan must be a JSON object.');
+  if (!input.name) errors.push('Plan is missing name.');
+  if (!input.owner) errors.push('Plan is missing owner.');
+  if (validPlan && !Array.isArray(input.actions)) errors.push('Plan actions must be an array.');
   if (actions.length === 0) errors.push('Plan must include at least one action.');
 
   const normalized = actions.map((action, index) => normalizeAction(action, index, errors, warnings));
@@ -15,10 +19,10 @@ export function buildReceipt(plan) {
   const highestRisk = normalized.reduce((current, action) => riskRank(action.risk) > riskRank(current) ? action.risk : current, 'low');
 
   return {
-    name: plan.name ?? 'Unnamed connector plan',
-    owner: plan.owner ?? 'unknown',
+    name: input.name ?? 'Unnamed connector plan',
+    owner: input.owner ?? 'unknown',
     generatedAt: new Date(0).toISOString(),
-    summary: plan.summary ?? '',
+    summary: input.summary ?? '',
     approvalRequired,
     highestRisk,
     actions: normalized,
@@ -28,19 +32,24 @@ export function buildReceipt(plan) {
 }
 
 function normalizeAction(action, index, errors, warnings) {
-  const id = action.id ?? `action-${index + 1}`;
-  const connector = action.connector ?? 'unknown';
-  const verb = action.verb ?? 'unknown';
-  const target = action.target ?? 'unknown';
-  const risk = allowedRisk.has(action.risk) ? action.risk : 'high';
-  const requiresApproval = action.requiresApproval === true || risk === 'high' || writeVerbs.has(verb);
+  const validAction = isRecord(action);
+  const input = validAction ? action : {};
+  const id = input.id ?? `action-${index + 1}`;
+  const connector = input.connector ?? 'unknown';
+  const verbToken = normalizeToken(input.verb);
+  const verb = verbToken || 'unknown';
+  const target = input.target ?? 'unknown';
+  const riskToken = normalizeToken(input.risk);
+  const risk = allowedRisk.has(riskToken) ? riskToken : 'high';
+  const requiresApproval = input.requiresApproval === true || risk === 'high' || writeVerbs.has(verb);
 
-  if (!action.id) warnings.push(`Action ${index + 1} is missing id; using ${id}.`);
-  if (!action.connector) errors.push(`${id} is missing connector.`);
-  if (!action.verb) errors.push(`${id} is missing verb.`);
-  if (!action.target) errors.push(`${id} is missing target.`);
-  if (!allowedRisk.has(action.risk)) warnings.push(`${id} has invalid or missing risk; treating as high.`);
-  if (requiresApproval && !action.approver) warnings.push(`${id} requires approval but has no approver.`);
+  if (!validAction) errors.push(`Action ${index + 1} must be a JSON object.`);
+  if (!input.id) warnings.push(`Action ${index + 1} is missing id; using ${id}.`);
+  if (!input.connector) errors.push(`${id} is missing connector.`);
+  if (!verbToken) errors.push(`${id} is missing verb.`);
+  if (!input.target) errors.push(`${id} is missing target.`);
+  if (!allowedRisk.has(riskToken)) warnings.push(`${id} has invalid or missing risk; treating as high.`);
+  if (requiresApproval && !input.approver) warnings.push(`${id} requires approval but has no approver.`);
 
   return {
     id,
@@ -49,10 +58,18 @@ function normalizeAction(action, index, errors, warnings) {
     target,
     risk,
     approvalRequired: requiresApproval,
-    approver: action.approver ?? null,
-    rollback: action.rollback ?? 'Manual review required before live execution.',
-    notes: action.notes ?? ''
+    approver: input.approver ?? null,
+    rollback: input.rollback ?? 'Manual review required before live execution.',
+    notes: input.notes ?? ''
   };
+}
+
+function isRecord(value) {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
+function normalizeToken(value) {
+  return typeof value === 'string' ? value.trim().toLowerCase() : undefined;
 }
 
 function riskRank(risk) {
