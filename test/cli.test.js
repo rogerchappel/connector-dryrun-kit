@@ -1,6 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { execFile } from 'node:child_process';
+import { mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 
@@ -62,4 +65,45 @@ test('rejects unsupported output formats before reading the plan', async () => {
   assert.equal(result.code, 1);
   assert.equal(result.stdout, '');
   assert.match(result.stderr, /Unsupported format/);
+});
+
+test('renders normalized policy fields through the CLI', async (t) => {
+  const directory = await mkdtemp(join(tmpdir(), 'connector-dryrun-cli-'));
+  t.after(() => rm(directory, { recursive: true, force: true }));
+  const planPath = join(directory, 'normalized.json');
+  await writeFile(planPath, JSON.stringify({
+    name: 'normalized',
+    owner: 'tester',
+    actions: [{ connector: 'crm', verb: ' UPDATE ', target: 'contact:1', risk: ' LOW ' }]
+  }));
+
+  const result = await runCli([planPath, '--format', 'json']);
+
+  assert.equal(result.code, 0);
+  const receipt = JSON.parse(result.stdout);
+  assert.equal(receipt.actions[0].verb, 'update');
+  assert.equal(receipt.actions[0].risk, 'low');
+  assert.equal(receipt.actions[0].approvalRequired, true);
+  assert.equal(receipt.approvalRequired, true);
+  assert.equal(receipt.highestRisk, 'low');
+});
+
+test('returns validation receipts for null plans and malformed actions', async (t) => {
+  const directory = await mkdtemp(join(tmpdir(), 'connector-dryrun-cli-'));
+  t.after(() => rm(directory, { recursive: true, force: true }));
+
+  for (const [filename, value, expectedError] of [
+    ['null.json', null, 'Plan must be a JSON object.'],
+    ['actions.json', { name: 'bad', owner: 'tester', actions: null }, 'Plan actions must be an array.'],
+    ['entry.json', { name: 'bad', owner: 'tester', actions: [null] }, 'Action 1 must be a JSON object.']
+  ]) {
+    const planPath = join(directory, filename);
+    await writeFile(planPath, JSON.stringify(value));
+    const result = await runCli([planPath, '--format', 'json']);
+
+    assert.equal(result.code, 2);
+    assert.equal(result.stderr, '');
+    const receipt = JSON.parse(result.stdout);
+    assert.ok(receipt.errors.includes(expectedError));
+  }
 });
