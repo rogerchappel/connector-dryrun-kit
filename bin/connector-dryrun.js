@@ -11,23 +11,47 @@ function usage() {
 Creates a local dry-run receipt for proposed connector actions.`;
 }
 
-if (args.includes('--help') || args.length === 0) {
+if (args.length === 1 && args[0] === '--help') {
   console.log(usage());
-  process.exit(args.length === 0 ? 1 : 0);
+  process.exit(0);
 }
 
-if (args.includes('--version')) {
+if (args.length === 1 && args[0] === '--version') {
   console.log(pkg.version);
   process.exit(0);
 }
 
+function usageError(message) {
+  console.error(`${message}\n\n${usage()}`);
+  process.exit(1);
+}
+
+if (args.length === 0) {
+  usageError('A plan path is required.');
+}
+
+if (args[0].startsWith('-')) {
+  usageError(`Unknown option: ${args[0]}`);
+}
+
 const planPath = args[0];
-const formatIndex = args.indexOf('--format');
-const format = formatIndex === -1 ? 'markdown' : args[formatIndex + 1];
+let format = 'markdown';
+
+if (args.length > 1) {
+  if (args[1] !== '--format') {
+    usageError(args[1].startsWith('-') ? `Unknown option: ${args[1]}` : `Unexpected argument: ${args[1]}`);
+  }
+  if (args.length === 2) {
+    usageError('Option --format requires a value.');
+  }
+  if (args.length > 3) {
+    usageError(args[3].startsWith('-') ? `Unknown or duplicate option: ${args[3]}` : `Unexpected argument: ${args[3]}`);
+  }
+  format = args[2];
+}
 
 if (!['markdown', 'json'].includes(format)) {
-  console.error('Unsupported format. Use markdown or json.');
-  process.exit(1);
+  usageError('Unsupported format. Use markdown or json.');
 }
 
 try {
