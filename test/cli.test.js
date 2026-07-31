@@ -67,6 +67,39 @@ test('rejects unsupported output formats before reading the plan', async () => {
   assert.match(result.stderr, /Unsupported format/);
 });
 
+test('accepts a plan path without an explicit format', async () => {
+  const result = await runCli([validPlan]);
+
+  assert.equal(result.code, 0);
+  assert.match(result.stdout, /^# Dry-Run Receipt/m);
+  assert.equal(result.stderr, '');
+});
+
+test('rejects invalid argument forms as usage errors before reading a plan', async () => {
+  const missingPlan = '/definitely/missing/plan.json';
+  const cases = [
+    { args: [], message: /plan path is required/i },
+    { args: ['--bogus'], message: /Unknown option: --bogus/ },
+    { args: [missingPlan, '--bogus'], message: /Unknown option: --bogus/ },
+    { args: [missingPlan, 'extra.json'], message: /Unexpected argument: extra\.json/ },
+    { args: [missingPlan, '--format'], message: /requires a value/ },
+    { args: [missingPlan, '--format', 'json', 'extra.json'], message: /Unexpected argument: extra\.json/ },
+    { args: [missingPlan, '--format', 'json', '--format', 'markdown'], message: /Unknown or duplicate option: --format/ },
+    { args: [missingPlan, '--format', 'json', '--help'], message: /Unknown or duplicate option: --help/ },
+    { args: ['--help', missingPlan], message: /Unknown option: --help/ },
+    { args: ['--version', missingPlan], message: /Unknown option: --version/ }
+  ];
+
+  for (const { args, message } of cases) {
+    const result = await runCli(args);
+    assert.equal(result.code, 1, args.join(' '));
+    assert.equal(result.stdout, '', args.join(' '));
+    assert.match(result.stderr, message, args.join(' '));
+    assert.match(result.stderr, /Usage: connector-dryrun/, args.join(' '));
+    assert.doesNotMatch(result.stderr, /ENOENT/, args.join(' '));
+  }
+});
+
 test('renders normalized policy fields through the CLI', async (t) => {
   const directory = await mkdtemp(join(tmpdir(), 'connector-dryrun-cli-'));
   t.after(() => rm(directory, { recursive: true, force: true }));
