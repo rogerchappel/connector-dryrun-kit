@@ -55,7 +55,7 @@ test('returns validation exit code when a receipt has errors', async () => {
   const result = await runCli([invalidPlan, '--format', 'markdown']);
 
   assert.equal(result.code, 2);
-  assert.match(result.stdout, /missing-connector is missing connector/);
+  assert.match(result.stdout, /missing-connector connector must be a non-blank string/);
   assert.equal(result.stderr, '');
 });
 
@@ -106,4 +106,33 @@ test('returns validation receipts for null plans and malformed actions', async (
     const receipt = JSON.parse(result.stdout);
     assert.ok(receipt.errors.includes(expectedError));
   }
+});
+
+test('returns validation exit code for malformed scalar fields', async (t) => {
+  const directory = await mkdtemp(join(tmpdir(), 'connector-dryrun-cli-'));
+  t.after(() => rm(directory, { recursive: true, force: true }));
+  const planPath = join(directory, 'malformed-scalars.json');
+  await writeFile(planPath, JSON.stringify({
+    name: {},
+    owner: 42,
+    summary: [],
+    actions: [{
+      id: [],
+      connector: {},
+      verb: 'read',
+      target: 7,
+      risk: 'low',
+      approver: {},
+      rollback: [],
+      notes: {}
+    }]
+  }));
+
+  const result = await runCli([planPath, '--format', 'markdown']);
+
+  assert.equal(result.code, 2);
+  assert.equal(result.stderr, '');
+  assert.match(result.stdout, /Plan summary must be a string when provided/);
+  assert.doesNotMatch(result.stdout, /\[object Object\]/);
+  assert.doesNotMatch(result.stdout, /^###\s*$/m);
 });

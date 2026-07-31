@@ -62,8 +62,62 @@ test('returns deterministic errors for malformed plans and actions', () => {
 
 test('reports missing connector fields as errors', () => {
   const receipt = buildReceipt({ name: 'bad', owner: 'tester', actions: [{ id: 'bad' }] });
-  assert.ok(receipt.errors.some((error) => error.includes('missing connector')));
+  assert.ok(receipt.errors.includes('bad connector must be a non-blank string.'));
   assert.equal(receipt.highestRisk, 'high');
+});
+
+test('validates and safely normalizes malformed scalar fields', () => {
+  const receipt = buildReceipt({
+    name: { bad: true },
+    owner: 42,
+    summary: ['context'],
+    actions: [{
+      id: [],
+      connector: {},
+      verb: 'read',
+      target: 7,
+      risk: 'low',
+      approver: {},
+      rollback: [],
+      notes: {}
+    }]
+  });
+
+  assert.deepEqual(receipt.errors, [
+    'Plan name must be a non-blank string.',
+    'Plan owner must be a non-blank string.',
+    'Plan summary must be a string when provided.',
+    'Action 1 id must be a string when provided.',
+    'action-1 connector must be a non-blank string.',
+    'action-1 target must be a non-blank string.',
+    'action-1 approver must be a string when provided.',
+    'action-1 rollback must be a string when provided.',
+    'action-1 notes must be a string when provided.'
+  ]);
+  assert.equal(receipt.name, 'Unnamed connector plan');
+  assert.equal(receipt.owner, 'unknown');
+  assert.equal(receipt.actions[0].id, 'action-1');
+  assert.equal(receipt.actions[0].connector, 'unknown');
+  assert.equal(receipt.actions[0].target, 'unknown');
+
+  const markdown = renderMarkdown(receipt);
+  assert.doesNotMatch(markdown, /\[object Object\]/);
+  assert.doesNotMatch(markdown, /^###\s*$/m);
+});
+
+test('rejects blank required strings with stable fallbacks', () => {
+  const receipt = buildReceipt({
+    name: ' ',
+    owner: '\t',
+    actions: [{ id: ' ', connector: ' ', verb: ' ', target: '\n', risk: 'low' }]
+  });
+
+  assert.ok(receipt.errors.includes('Plan name must be a non-blank string.'));
+  assert.ok(receipt.errors.includes('Plan owner must be a non-blank string.'));
+  assert.ok(receipt.errors.includes('action-1 connector must be a non-blank string.'));
+  assert.ok(receipt.errors.includes('action-1 is missing verb.'));
+  assert.ok(receipt.errors.includes('action-1 target must be a non-blank string.'));
+  assert.equal(receipt.actions[0].id, 'action-1');
 });
 
 test('renders markdown receipt', () => {
