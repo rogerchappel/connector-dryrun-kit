@@ -3,6 +3,7 @@
 ```bash
 connector-dryrun <plan.json> --format markdown
 connector-dryrun <plan.json> --format json
+connector-dryrun <plan.json>
 connector-dryrun --help
 connector-dryrun --version
 ```
@@ -28,3 +29,10 @@ action entries, produce a receipt and exit `2`; malformed JSON or unreadable fil
 exit `1`.
 
 Unsupported output formats fail before the plan is read, which keeps bad CLI invocations distinct from invalid receipt content.
+
+Arguments are parsed strictly in the forms shown above. Help and version must be
+standalone. Unknown options, extra plan paths or other positional arguments,
+duplicate or conflicting options, and a missing `--format` value print a usage
+error to standard error and exit `1` before the plan file is read. The only
+supported format values are `markdown` and `json`; omitting `--format` selects
+`markdown`.
