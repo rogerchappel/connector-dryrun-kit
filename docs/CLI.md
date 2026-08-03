@@ -1,5 +1,8 @@
 # CLI
 
+The CLI supports Node.js 20.0.0 and newer. CI verifies the declared minimum and
+the current Node.js 24 LTS line using the packed and installed executable.
+
 ```bash
 connector-dryrun <plan.json> --format markdown
 connector-dryrun <plan.json> --format json

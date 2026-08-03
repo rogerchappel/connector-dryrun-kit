@@ -2,6 +2,9 @@
 
 `connector-dryrun-kit` turns proposed connector actions into local dry-run receipts. It is designed for agents that need to preview external side effects before touching CRMs, project-management tools, chat systems, email, or issue trackers.
 
+Node.js 20.0.0 or newer is supported. Release checks verify the exact minimum and
+the current Node.js 24 LTS line.
+
 ## Quickstart
 
 ```bash
@@ -17,7 +20,9 @@ Run the complete release candidate gate before publishing or cutting a release:
 npm run release:check
 ```
 
-That command runs syntax checks, tests, CLI smoke fixtures, validation, and an npm package contents smoke test.
+That command runs syntax checks, tests, CLI smoke fixtures, validation, and a
+packed-package smoke that installs and invokes the published `connector-dryrun`
+bin for help, version, and fixture rendering.
 
 ## Input
 

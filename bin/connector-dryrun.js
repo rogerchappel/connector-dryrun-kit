@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 import { readFileSync } from 'node:fs';
 import { buildReceipt, renderJson, renderMarkdown } from '../src/index.js';
-import pkg from '../package.json' with { type: 'json' };
+
+const pkg = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
 
 const args = process.argv.slice(2);
 
