@@ -3,6 +3,10 @@
   "version": "0.1.0",
   "description": "Local-first connector action dry-run receipts for agent workflows.",
   "type": "module",
+  "main": "./src/index.js",
+  "exports": {
+    ".": "./src/index.js"
+  },
   "bin": {
     "connector-dryrun": "./bin/connector-dryrun.js"
   },
@@ -48,13 +52,5 @@
     "CHANGELOG.md",
     "CONTRIBUTING.md",
     "SECURITY.md"
-  ],
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/rogerchappel/connector-dryrun-kit.git"
-  },
-  "bugs": {
-    "url": "https://github.com/rogerchappel/connector-dryrun-kit/issues"
-  },
-  "homepage": "https://github.com/rogerchappel/connector-dryrun-kit#readme"
+  ]
 }
