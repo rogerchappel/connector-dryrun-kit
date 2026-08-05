@@ -38,6 +38,21 @@ try {
     stdio: "pipe"
   });
 
+  const imported = execFileSync("node", [
+    "--input-type=module",
+    "--eval",
+    "import { buildReceipt, renderJson, renderMarkdown } from 'connector-dryrun-kit';\n" +
+      "const receipt = buildReceipt({ name: 'Package consumer', owner: 'smoke', actions: [{ connector: 'test', verb: 'read', target: 'fixture', risk: 'low' }] });\n" +
+      "if (typeof renderJson(receipt) !== 'string' || !renderMarkdown(receipt).includes('Package consumer')) process.exit(1);\n" +
+      "process.stdout.write(receipt.name);"
+  ], {
+    cwd: directory,
+    encoding: "utf8"
+  });
+  if (imported !== "Package consumer") {
+    throw new Error("installed package root did not expose the public library API");
+  }
+
   const binDirectory = join(directory, "node_modules", ".bin");
   const env = { ...process.env, PATH: `${binDirectory}${delimiter}${process.env.PATH ?? ""}` };
   const runInstalledBin = (args) => execFileSync("connector-dryrun", args, {
@@ -62,7 +77,7 @@ try {
     throw new Error("installed CLI did not render the fixture receipt");
   }
 
-  console.log(`package smoke ok: ${pack.filename} includes ${pack.files.length} files and its installed bin renders fixtures`);
+  console.log(`package smoke ok: ${pack.filename} includes ${pack.files.length} files, exposes its library API, and its installed bin renders fixtures`);
 } finally {
   rmSync(directory, { recursive: true, force: true });
   rmSync(packagePath, { force: true });

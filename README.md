@@ -14,6 +14,12 @@ node bin/connector-dryrun.js fixtures/sample-plan.json --format json
 node bin/connector-dryrun.js --version
 ```
 
+The package root exposes the receipt builder and renderers for ESM consumers:
+
+```js
+import { buildReceipt, renderJson, renderMarkdown } from "connector-dryrun-kit";
+```
+
 Run the complete release candidate gate before publishing or cutting a release:
 
 ```bash
@@ -21,8 +27,9 @@ npm run release:check
 ```
 
 That command runs syntax checks, tests, CLI smoke fixtures, validation, and a
-packed-package smoke that installs and invokes the published `connector-dryrun`
-bin for help, version, and fixture rendering.
+packed-package smoke that installs the tarball in a clean consumer, imports the
+public library API, and invokes the published `connector-dryrun` bin for help,
+version, and fixture rendering.
 
 ## Input
 
