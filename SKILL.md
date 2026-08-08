@@ -33,3 +33,6 @@ node bin/connector-dryrun.js fixtures/sample-plan.json --format json
 ## Validation Workflow
 
 Run `npm test`, `npm run check`, and `npm run smoke`. Review warnings and errors in the receipt before using any separate live connector.
+Missing, blank, or non-string rollback values on write-like actions are
+validation errors; the CLI still renders the receipt and exits `2`. Read-only
+actions may omit rollback and receive conservative manual-review guidance.
