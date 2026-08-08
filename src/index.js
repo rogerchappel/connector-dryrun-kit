@@ -45,13 +45,15 @@ function normalizeAction(action, index, errors, warnings) {
   const risk = allowedRisk.has(riskToken) ? riskToken : 'high';
   const requiresApproval = input.requiresApproval === true || risk === 'high' || writeVerbs.has(verb);
   const approver = optionalString(input, 'approver', null, `${id} approver`, errors);
-  const rollback = optionalString(
-    input,
-    'rollback',
-    'Manual review required before live execution.',
-    `${id} rollback`,
-    errors
-  );
+  const rollback = writeVerbs.has(verb)
+    ? writeRollback(input, id, errors)
+    : optionalString(
+      input,
+      'rollback',
+      'Manual review required before live execution.',
+      `${id} rollback`,
+      errors
+    );
   const notes = optionalString(input, 'notes', '', `${id} notes`, errors);
 
   if (!validAction) errors.push(`Action ${index + 1} must be a JSON object.`);
@@ -116,6 +118,14 @@ function optionalNonBlankString(input, key, fallback, label, errors) {
   return input[key].trim();
 }
 
+function writeRollback(input, id, errors) {
+  if (!hasNonBlankString(input, 'rollback')) {
+    errors.push(`${id} rollback must be a non-blank string for write-like actions.`);
+    return null;
+  }
+  return input.rollback.trim();
+}
+
 function riskRank(risk) {
   return { low: 1, medium: 2, high: 3 }[risk] ?? 3;
 }
@@ -143,7 +153,7 @@ export function renderMarkdown(receipt) {
       `- Risk: ${action.risk}`,
       `- Approval required: ${action.approvalRequired ? 'yes' : 'no'}`,
       `- Approver: ${action.approver ?? 'not assigned'}`,
-      `- Rollback: ${action.rollback}`,
+      `- Rollback: ${action.rollback ?? 'not supplied'}`,
       ''
     );
   }
