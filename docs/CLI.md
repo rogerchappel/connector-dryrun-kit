@@ -30,6 +30,10 @@ Warnings do not fail the command because a reviewer may still use the receipt to
 Malformed plan shapes, including `null` plans, non-array `actions`, and non-object
 action entries, produce a receipt and exit `2`; malformed JSON or unreadable files
 exit `1`.
+Plans with missing, non-array, or empty `actions` render a fail-closed summary of
+`Highest risk: high` and `Approval required: yes` (or the equivalent JSON fields),
+alongside validation errors and exit `2`. The summary indicates that the invalid
+plan cannot be safely assessed; it does not describe a validated action.
 Write-like actions with a missing, blank, or non-string rollback also produce a
 receipt and exit `2`. Their receipt displays `not supplied` instead of presenting
 generated guidance as supplied evidence. Read-only actions may omit rollback and

@@ -160,11 +160,27 @@ test('renders markdown receipt', () => {
   assert.match(renderMarkdown(receipt), /Connector: slack/);
 });
 
-test('rejects plans with no actions', () => {
-  const receipt = buildReceipt({ name: 'empty', owner: 'tester', actions: [] });
+test('summarizes plans without a usable actions collection conservatively', () => {
+  for (const plan of [
+    { name: 'missing', owner: 'tester' },
+    { name: 'malformed', owner: 'tester', actions: null },
+    { name: 'empty', owner: 'tester', actions: [] }
+  ]) {
+    const receipt = buildReceipt(plan);
 
-  assert.equal(receipt.actions.length, 0);
-  assert.ok(receipt.errors.includes('Plan must include at least one action.'));
+    assert.equal(receipt.actions.length, 0);
+    assert.equal(receipt.highestRisk, 'high');
+    assert.equal(receipt.approvalRequired, true);
+    assert.ok(receipt.errors.includes('Plan must include at least one action.'));
+
+    const parsed = JSON.parse(renderJson(receipt));
+    assert.equal(parsed.highestRisk, 'high');
+    assert.equal(parsed.approvalRequired, true);
+
+    const markdown = renderMarkdown(receipt);
+    assert.match(markdown, /Highest risk: high/);
+    assert.match(markdown, /Approval required: yes/);
+  }
 });
 
 test('renders deterministic json receipts', () => {

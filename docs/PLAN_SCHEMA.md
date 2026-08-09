@@ -21,6 +21,10 @@ must be a string.
 The plan must be a JSON object and `actions` must be an array of JSON objects.
 Malformed structures are rendered as receipt validation errors instead of causing a
 runtime exception.
+When `actions` is missing, is not an array, or is empty, the receipt has no action
+entries but deliberately summarizes the invalid plan as `highestRisk: "high"` and
+`approvalRequired: true`. These fail-closed values are not an assessment of any
+action; they prevent an incomplete plan from appearing low-risk or pre-approved.
 Present scalar fields with non-string values produce validation errors and safe
 fallback text. This keeps JSON and Markdown receipts renderable without JavaScript
 object or array coercion. Blank required strings also produce validation errors.
