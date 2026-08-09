@@ -171,6 +171,33 @@ test('returns validation receipts for null plans and malformed actions', async (
   }
 });
 
+test('renders conservative summaries for plans without actions in both formats', async (t) => {
+  const directory = await mkdtemp(join(tmpdir(), 'connector-dryrun-cli-'));
+  t.after(() => rm(directory, { recursive: true, force: true }));
+
+  for (const [filename, value] of [
+    ['missing.json', { name: 'missing', owner: 'tester' }],
+    ['malformed.json', { name: 'malformed', owner: 'tester', actions: null }],
+    ['empty.json', { name: 'empty', owner: 'tester', actions: [] }]
+  ]) {
+    const planPath = join(directory, filename);
+    await writeFile(planPath, JSON.stringify(value));
+
+    const jsonResult = await runCli([planPath, '--format', 'json']);
+    assert.equal(jsonResult.code, 2, filename);
+    assert.equal(jsonResult.stderr, '', filename);
+    const receipt = JSON.parse(jsonResult.stdout);
+    assert.equal(receipt.highestRisk, 'high', filename);
+    assert.equal(receipt.approvalRequired, true, filename);
+
+    const markdownResult = await runCli([planPath, '--format', 'markdown']);
+    assert.equal(markdownResult.code, 2, filename);
+    assert.equal(markdownResult.stderr, '', filename);
+    assert.match(markdownResult.stdout, /Highest risk: high/, filename);
+    assert.match(markdownResult.stdout, /Approval required: yes/, filename);
+  }
+});
+
 test('returns validation exit code for malformed scalar fields', async (t) => {
   const directory = await mkdtemp(join(tmpdir(), 'connector-dryrun-cli-'));
   t.after(() => rm(directory, { recursive: true, force: true }));
