@@ -10,9 +10,13 @@ Every plan is a JSON object with:
 Each action uses string fields for `id`, `connector`, `verb`, `target`, `risk`,
 `approver`, `rollback`, and `notes`. `connector`, `verb`, and `target` must be
 non-blank. An omitted or blank `id` receives a deterministic `action-N` fallback
-and warning. `approver`, `rollback`, and `notes` are optional; when present they
-must be strings. An omitted rollback receives a conservative manual-review
-fallback.
+and warning. `approver` and `notes` are optional strings. Write-like actions
+(`create`, `update`, `delete`, `send`, `invite`, and `archive`) require rollback
+to be a supplied, non-blank string. Missing, blank, and non-string values produce
+a validation error and render as `not supplied`, so generated guidance cannot be
+mistaken for supplied rollback evidence. Read-only actions may omit rollback and
+receive a conservative manual-review fallback; when provided, their rollback
+must be a string.
 
 The plan must be a JSON object and `actions` must be an array of JSON objects.
 Malformed structures are rendered as receipt validation errors instead of causing a

@@ -30,6 +30,10 @@ Warnings do not fail the command because a reviewer may still use the receipt to
 Malformed plan shapes, including `null` plans, non-array `actions`, and non-object
 action entries, produce a receipt and exit `2`; malformed JSON or unreadable files
 exit `1`.
+Write-like actions with a missing, blank, or non-string rollback also produce a
+receipt and exit `2`. Their receipt displays `not supplied` instead of presenting
+generated guidance as supplied evidence. Read-only actions may omit rollback and
+receive conservative manual-review guidance without failing validation.
 
 Unsupported output formats fail before the plan is read, which keeps bad CLI invocations distinct from invalid receipt content.
 

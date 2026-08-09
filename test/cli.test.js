@@ -59,6 +59,30 @@ test('returns validation exit code when a receipt has errors', async () => {
   assert.equal(result.stderr, '');
 });
 
+test('returns validation exit code for missing, blank, and malformed write rollback values', async (t) => {
+  const directory = await mkdtemp(join(tmpdir(), 'connector-dryrun-cli-'));
+  t.after(() => rm(directory, { recursive: true, force: true }));
+
+  for (const [filename, rollback] of [
+    ['missing.json', undefined],
+    ['blank.json', '   '],
+    ['malformed.json', []]
+  ]) {
+    const action = { id: 'write', connector: 'crm', verb: 'delete', target: 'contact:1', risk: 'low' };
+    if (rollback !== undefined) action.rollback = rollback;
+    const planPath = join(directory, filename);
+    await writeFile(planPath, JSON.stringify({ name: 'rollback check', owner: 'tester', actions: [action] }));
+
+    const result = await runCli([planPath, '--format', 'json']);
+
+    assert.equal(result.code, 2, filename);
+    assert.equal(result.stderr, '', filename);
+    const receipt = JSON.parse(result.stdout);
+    assert.equal(receipt.actions[0].rollback, null);
+    assert.ok(receipt.errors.includes('write rollback must be a non-blank string for write-like actions.'));
+  }
+});
+
 test('rejects unsupported output formats before reading the plan', async () => {
   const result = await runCli([validPlan, '--format', 'html']);
 
@@ -107,7 +131,13 @@ test('renders normalized policy fields through the CLI', async (t) => {
   await writeFile(planPath, JSON.stringify({
     name: 'normalized',
     owner: 'tester',
-    actions: [{ connector: 'crm', verb: ' UPDATE ', target: 'contact:1', risk: ' LOW ' }]
+    actions: [{
+      connector: 'crm',
+      verb: ' UPDATE ',
+      target: 'contact:1',
+      risk: ' LOW ',
+      rollback: 'Restore the previous contact snapshot.'
+    }]
   }));
 
   const result = await runCli([planPath, '--format', 'json']);

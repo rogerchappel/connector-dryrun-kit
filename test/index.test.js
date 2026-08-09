@@ -44,6 +44,35 @@ test('treats unknown risk tokens conservatively', () => {
   assert.equal(receipt.highestRisk, 'high');
 });
 
+test('requires supplied non-blank rollback evidence for write-like actions', () => {
+  for (const [rollback, expectedError] of [
+    [undefined, 'write rollback must be a non-blank string for write-like actions.'],
+    ['', 'write rollback must be a non-blank string for write-like actions.'],
+    ['   ', 'write rollback must be a non-blank string for write-like actions.'],
+    [[], 'write rollback must be a non-blank string for write-like actions.']
+  ]) {
+    const action = { id: 'write', connector: 'crm', verb: 'update', target: 'contact:1', risk: 'low' };
+    if (rollback !== undefined) action.rollback = rollback;
+
+    const receipt = buildReceipt({ name: 'demo', owner: 'tester', actions: [action] });
+
+    assert.ok(receipt.errors.includes(expectedError));
+    assert.equal(receipt.actions[0].rollback, null);
+    assert.match(renderMarkdown(receipt), /Rollback: not supplied/);
+  }
+});
+
+test('keeps conservative rollback guidance optional for read-only actions', () => {
+  const receipt = buildReceipt({
+    name: 'demo',
+    owner: 'tester',
+    actions: [{ id: 'read', connector: 'crm', verb: 'read', target: 'contact:1', risk: 'low' }]
+  });
+
+  assert.equal(receipt.actions[0].rollback, 'Manual review required before live execution.');
+  assert.equal(receipt.errors.length, 0);
+});
+
 test('returns deterministic errors for malformed plans and actions', () => {
   for (const plan of [null, [], 'plan']) {
     const receipt = buildReceipt(plan);
