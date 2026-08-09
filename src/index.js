@@ -16,8 +16,11 @@ export function buildReceipt(plan) {
   if (actions.length === 0) errors.push('Plan must include at least one action.');
 
   const normalized = actions.map((action, index) => normalizeAction(action, index, errors, warnings));
-  const approvalRequired = normalized.some((action) => action.approvalRequired);
-  const highestRisk = normalized.reduce((current, action) => riskRank(action.risk) > riskRank(current) ? action.risk : current, 'low');
+  const hasActions = normalized.length > 0;
+  const approvalRequired = !hasActions || normalized.some((action) => action.approvalRequired);
+  const highestRisk = hasActions
+    ? normalized.reduce((current, action) => riskRank(action.risk) > riskRank(current) ? action.risk : current, 'low')
+    : 'high';
 
   return {
     name,
