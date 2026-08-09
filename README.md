@@ -38,6 +38,9 @@ Plans are JSON files with `name`, `owner`, optional `summary`, and an `actions` 
 Plans and actions must be JSON objects. Verb and risk tokens are trimmed and
 lowercased, so casing or surrounding whitespace does not change approval policy.
 Unknown risks are treated conservatively as `high`.
+Missing, non-array, and empty action collections produce validation errors and a
+fail-closed summary (`highestRisk: "high"`, `approvalRequired: true`) so an
+incomplete plan cannot be mistaken for a low-risk plan that needs no approval.
 Write-like actions (`create`, `update`, `delete`, `send`, `invite`, and `archive`)
 must supply a non-blank string in `rollback`. Missing, blank, or non-string
 rollback values are rendered as validation errors and make the CLI exit `2`.
