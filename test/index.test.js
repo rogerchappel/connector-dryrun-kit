@@ -32,6 +32,23 @@ test('normalizes supported verb and risk tokens before policy decisions', () => 
   }
 });
 
+test('reports unsupported verb tokens and fails closed', () => {
+  for (const verb of ['udpate', ' UDPATE ', 'publish']) {
+    const receipt = buildReceipt({
+      name: 'demo',
+      owner: 'tester',
+      actions: [{ id: 'unknown', connector: 'crm', verb, target: 'contact:1', risk: 'low' }]
+    });
+
+    assert.equal(receipt.actions[0].verb, verb.trim().toLowerCase());
+    assert.equal(receipt.actions[0].approvalRequired, true);
+    assert.equal(receipt.actions[0].rollback, 'Manual review required before live execution.');
+    assert.equal(receipt.approvalRequired, true);
+    assert.equal(receipt.highestRisk, 'low');
+    assert.deepEqual(receipt.errors, [`unknown has unsupported verb: ${verb.trim().toLowerCase()}.`]);
+  }
+});
+
 test('treats unknown risk tokens conservatively', () => {
   const receipt = buildReceipt({
     name: 'demo',
