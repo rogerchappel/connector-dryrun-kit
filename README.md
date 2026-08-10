@@ -37,7 +37,10 @@ Plans are JSON files with `name`, `owner`, optional `summary`, and an `actions` 
 
 Plans and actions must be JSON objects. Verb and risk tokens are trimmed and
 lowercased, so casing or surrounding whitespace does not change approval policy.
-Unknown risks are treated conservatively as `high`.
+The accepted verbs are `read`, `create`, `update`, `delete`, `send`, `invite`,
+and `archive`. Unsupported non-blank verbs produce validation errors, require
+approval even at low risk, retain their normalized token in the receipt, and use
+manual-review rollback guidance. Unknown risks are treated conservatively as `high`.
 Missing, non-array, and empty action collections produce validation errors and a
 fail-closed summary (`highestRisk: "high"`, `approvalRequired: true`) so an
 incomplete plan cannot be mistaken for a low-risk plan that needs no approval.

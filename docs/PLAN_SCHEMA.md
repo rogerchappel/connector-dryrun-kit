@@ -31,5 +31,10 @@ object or array coercion. Blank required strings also produce validation errors.
 
 Verb and risk tokens are trimmed and lowercased before validation and approval
 decisions. For example, `UPDATE`, ` update `, and `update` are all rendered as
-`update` and require approval. Risk must normalize to `low`, `medium`, or `high`;
+`update` and require approval. The accepted verbs are the read-only `read` verb
+and the write-like `create`, `update`, `delete`, `send`, `invite`, and `archive`
+verbs. Any other non-blank token is rendered in normalized form, produces a
+validation error, requires approval even at low risk, and receives manual-review
+rollback guidance. This fail-closed handling prevents misspellings or unsupported
+operations from bypassing approval and rollback review. Risk must normalize to `low`, `medium`, or `high`;
 unknown, missing, and non-string risks are treated conservatively as `high`.
