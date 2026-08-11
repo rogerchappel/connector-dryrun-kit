@@ -151,6 +151,35 @@ test('renders normalized policy fields through the CLI', async (t) => {
   assert.equal(receipt.highestRisk, 'low');
 });
 
+test('reports unsupported verbs in JSON and Markdown with validation exit status', async (t) => {
+  const directory = await mkdtemp(join(tmpdir(), 'connector-dryrun-cli-'));
+  t.after(() => rm(directory, { recursive: true, force: true }));
+  const planPath = join(directory, 'unsupported-verb.json');
+  await writeFile(planPath, JSON.stringify({
+    name: 'unsupported verb',
+    owner: 'tester',
+    actions: [{ id: 'typo', connector: 'crm', verb: ' UDPATE ', target: 'contact:1', risk: 'low' }]
+  }));
+
+  const jsonResult = await runCli([planPath, '--format', 'json']);
+  assert.equal(jsonResult.code, 2);
+  assert.equal(jsonResult.stderr, '');
+  const receipt = JSON.parse(jsonResult.stdout);
+  assert.equal(receipt.actions[0].verb, 'udpate');
+  assert.equal(receipt.actions[0].approvalRequired, true);
+  assert.equal(receipt.actions[0].rollback, 'Manual review required before live execution.');
+  assert.equal(receipt.approvalRequired, true);
+  assert.deepEqual(receipt.errors, ['typo has unsupported verb: udpate.']);
+
+  const markdownResult = await runCli([planPath, '--format', 'markdown']);
+  assert.equal(markdownResult.code, 2);
+  assert.equal(markdownResult.stderr, '');
+  assert.match(markdownResult.stdout, /Verb: udpate/);
+  assert.match(markdownResult.stdout, /Approval required: yes/);
+  assert.match(markdownResult.stdout, /Rollback: Manual review required before live execution\./);
+  assert.match(markdownResult.stdout, /typo has unsupported verb: udpate\./);
+});
+
 test('returns validation receipts for null plans and malformed actions', async (t) => {
   const directory = await mkdtemp(join(tmpdir(), 'connector-dryrun-cli-'));
   t.after(() => rm(directory, { recursive: true, force: true }));

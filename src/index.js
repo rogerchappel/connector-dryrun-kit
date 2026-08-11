@@ -1,5 +1,6 @@
 const allowedRisk = new Set(['low', 'medium', 'high']);
 const writeVerbs = new Set(['create', 'update', 'delete', 'send', 'invite', 'archive']);
+const allowedVerbs = new Set(['read', ...writeVerbs]);
 
 export function buildReceipt(plan) {
   const errors = [];
@@ -43,10 +44,11 @@ function normalizeAction(action, index, errors, warnings) {
   const connector = requiredString(input, 'connector', `${id} connector`, 'unknown', errors);
   const verbToken = normalizeToken(input.verb);
   const verb = verbToken || 'unknown';
+  const supportedVerb = allowedVerbs.has(verbToken);
   const target = requiredString(input, 'target', `${id} target`, 'unknown', errors);
   const riskToken = normalizeToken(input.risk);
   const risk = allowedRisk.has(riskToken) ? riskToken : 'high';
-  const requiresApproval = input.requiresApproval === true || risk === 'high' || writeVerbs.has(verb);
+  const requiresApproval = input.requiresApproval === true || risk === 'high' || !supportedVerb || writeVerbs.has(verb);
   const approver = optionalString(input, 'approver', null, `${id} approver`, errors);
   const rollback = writeVerbs.has(verb)
     ? writeRollback(input, id, errors)
@@ -62,6 +64,7 @@ function normalizeAction(action, index, errors, warnings) {
   if (!validAction) errors.push(`Action ${index + 1} must be a JSON object.`);
   if (!hasNonBlankString(input, 'id')) warnings.push(`Action ${index + 1} is missing id; using ${id}.`);
   if (!verbToken) errors.push(`${id} is missing verb.`);
+  else if (!supportedVerb) errors.push(`${id} has unsupported verb: ${verb}.`);
   if (!allowedRisk.has(riskToken)) warnings.push(`${id} has invalid or missing risk; treating as high.`);
   if (requiresApproval && !approver) warnings.push(`${id} requires approval but has no approver.`);
 
