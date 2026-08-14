@@ -180,6 +180,41 @@ test('reports unsupported verbs in JSON and Markdown with validation exit status
   assert.match(markdownResult.stdout, /typo has unsupported verb: udpate\./);
 });
 
+test('validates requiresApproval through JSON and Markdown CLI output', async (t) => {
+  const directory = await mkdtemp(join(tmpdir(), 'connector-dryrun-cli-'));
+  t.after(() => rm(directory, { recursive: true, force: true }));
+
+  for (const [label, requiresApproval, valid] of [
+    ['true', true, true],
+    ['false', false, true],
+    ['string', 'true', false],
+    ['number', 1, false],
+    ['null', null, false],
+    ['object', {}, false],
+    ['array', [], false]
+  ]) {
+    const planPath = join(directory, `${label}.json`);
+    await writeFile(planPath, JSON.stringify({
+      name: 'approval check',
+      owner: 'tester',
+      actions: [{ id: 'read', connector: 'crm', verb: 'read', target: 'contact:1', risk: 'low', requiresApproval }]
+    }));
+
+    const jsonResult = await runCli([planPath, '--format', 'json']);
+    assert.equal(jsonResult.code, valid ? 0 : 2, label);
+    assert.equal(jsonResult.stderr, '', label);
+    const receipt = JSON.parse(jsonResult.stdout);
+    assert.equal(receipt.actions[0].approvalRequired, valid ? requiresApproval : true, label);
+    assert.equal(receipt.approvalRequired, valid ? requiresApproval : true, label);
+    assert.deepEqual(receipt.errors, valid ? [] : ['read requiresApproval must be a boolean when provided.'], label);
+
+    const markdownResult = await runCli([planPath, '--format', 'markdown']);
+    assert.equal(markdownResult.code, valid ? 0 : 2, label);
+    assert.match(markdownResult.stdout, new RegExp(`Approval required: ${valid && !requiresApproval ? 'no' : 'yes'}`), label);
+    if (!valid) assert.match(markdownResult.stdout, /read requiresApproval must be a boolean when provided\./, label);
+  }
+});
+
 test('returns validation receipts for null plans and malformed actions', async (t) => {
   const directory = await mkdtemp(join(tmpdir(), 'connector-dryrun-cli-'));
   t.after(() => rm(directory, { recursive: true, force: true }));
