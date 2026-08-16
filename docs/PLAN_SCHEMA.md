@@ -10,7 +10,11 @@ Every plan is a JSON object with:
 Each action uses string fields for `id`, `connector`, `verb`, `target`, `risk`,
 `approver`, `rollback`, and `notes`. `connector`, `verb`, and `target` must be
 non-blank. An omitted or blank `id` receives a deterministic `action-N` fallback
-and warning. `approver` and `notes` are optional strings. Write-like actions
+and warning. `requiresApproval` is optional and, when supplied, must be a JSON
+boolean. `true` explicitly requires approval and `false` preserves the normal
+risk and verb policy decision. Any other value produces a field-specific
+validation error and is treated as `true`, so malformed input fails closed in
+both JSON and Markdown receipts. `approver` and `notes` are optional strings. Write-like actions
 (`create`, `update`, `delete`, `send`, `invite`, and `archive`) require rollback
 to be a supplied, non-blank string. Missing, blank, and non-string values produce
 a validation error and render as `not supplied`, so generated guidance cannot be

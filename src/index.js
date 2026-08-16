@@ -48,7 +48,8 @@ function normalizeAction(action, index, errors, warnings) {
   const target = requiredString(input, 'target', `${id} target`, 'unknown', errors);
   const riskToken = normalizeToken(input.risk);
   const risk = allowedRisk.has(riskToken) ? riskToken : 'high';
-  const requiresApproval = input.requiresApproval === true || risk === 'high' || !supportedVerb || writeVerbs.has(verb);
+  const explicitApproval = optionalBoolean(input, 'requiresApproval', `${id} requiresApproval`, errors);
+  const requiresApproval = explicitApproval || risk === 'high' || !supportedVerb || writeVerbs.has(verb);
   const approver = optionalString(input, 'approver', null, `${id} approver`, errors);
   const rollback = writeVerbs.has(verb)
     ? writeRollback(input, id, errors)
@@ -122,6 +123,15 @@ function optionalNonBlankString(input, key, fallback, label, errors) {
   }
   if (input[key].trim().length === 0) return fallback;
   return input[key].trim();
+}
+
+function optionalBoolean(input, key, label, errors) {
+  if (!Object.hasOwn(input, key)) return false;
+  if (typeof input[key] !== 'boolean') {
+    errors.push(`${label} must be a boolean when provided.`);
+    return true;
+  }
+  return input[key];
 }
 
 function writeRollback(input, id, errors) {

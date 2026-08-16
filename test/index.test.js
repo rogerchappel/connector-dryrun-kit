@@ -61,6 +61,37 @@ test('treats unknown risk tokens conservatively', () => {
   assert.equal(receipt.highestRisk, 'high');
 });
 
+test('preserves boolean requiresApproval values', () => {
+  for (const requiresApproval of [true, false]) {
+    const receipt = buildReceipt({
+      name: 'demo',
+      owner: 'tester',
+      actions: [{ id: 'read', connector: 'crm', verb: 'read', target: 'contact:1', risk: 'low', requiresApproval }]
+    });
+
+    assert.equal(receipt.actions[0].approvalRequired, requiresApproval);
+    assert.equal(receipt.approvalRequired, requiresApproval);
+    assert.deepEqual(receipt.errors, []);
+  }
+});
+
+test('rejects malformed requiresApproval values and fails closed', () => {
+  for (const requiresApproval of ['true', 1, null, {}, []]) {
+    const receipt = buildReceipt({
+      name: 'demo',
+      owner: 'tester',
+      actions: [{ id: 'read', connector: 'crm', verb: 'read', target: 'contact:1', risk: 'low', requiresApproval }]
+    });
+
+    assert.equal(receipt.actions[0].approvalRequired, true);
+    assert.equal(receipt.approvalRequired, true);
+    assert.deepEqual(receipt.errors, ['read requiresApproval must be a boolean when provided.']);
+    assert.equal(JSON.parse(renderJson(receipt)).actions[0].approvalRequired, true);
+    assert.match(renderMarkdown(receipt), /Approval required: yes/);
+    assert.match(renderMarkdown(receipt), /read requiresApproval must be a boolean when provided\./);
+  }
+});
+
 test('requires supplied non-blank rollback evidence for write-like actions', () => {
   for (const [rollback, expectedError] of [
     [undefined, 'write rollback must be a non-blank string for write-like actions.'],
