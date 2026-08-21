@@ -8,7 +8,7 @@
     ".": "./src/index.js"
   },
   "bin": {
-    "connector-dryrun": "./bin/connector-dryrun.js"
+    "connector-dryrun": "bin/connector-dryrun.js"
   },
   "scripts": {
     "check": "node --check bin/connector-dryrun.js && node --check src/index.js",

@@ -27,9 +27,10 @@ npm run release:check
 ```
 
 That command runs syntax checks, tests, CLI smoke fixtures, validation, and a
-packed-package smoke that installs the tarball in a clean consumer, imports the
+package smoke. The package smoke verifies that `npm publish --dry-run` leaves the
+manifest unchanged, installs the packed tarball in a clean consumer, imports the
 public library API, and invokes the published `connector-dryrun` bin for help,
-version, and fixture rendering.
+version, and fixture rendering. It does not publish the package.
 
 ## Input
 

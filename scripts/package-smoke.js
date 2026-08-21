@@ -1,8 +1,27 @@
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
 import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { delimiter, join } from "node:path";
 import { fileURLToPath } from "node:url";
+
+const publish = spawnSync("npm", ["publish", "--dry-run", "--json"], {
+  encoding: "utf8"
+});
+if (publish.status !== 0) {
+  throw new Error(`npm publish --dry-run failed:\n${publish.stderr || publish.stdout}`);
+}
+if (/auto-corrected|invalid-bin/i.test(publish.stderr)) {
+  throw new Error(`npm publish --dry-run normalized invalid package metadata:\n${publish.stderr}`);
+}
+const parsedPublish = JSON.parse(publish.stdout);
+const publishResult = Array.isArray(parsedPublish)
+  ? parsedPublish[0]
+  : parsedPublish.files
+    ? parsedPublish
+    : parsedPublish["connector-dryrun-kit"];
+if (!publishResult?.files?.some((file) => file.path === "bin/connector-dryrun.js")) {
+  throw new Error("npm publish --dry-run did not include bin/connector-dryrun.js");
+}
 
 const output = execFileSync("npm", ["pack", "--json"], {
   encoding: "utf8"
@@ -37,6 +56,11 @@ try {
   execFileSync("npm", ["install", "--ignore-scripts", "--no-audit", "--no-fund", "--prefix", directory, packagePath], {
     stdio: "pipe"
   });
+
+  const installedManifest = JSON.parse(readFileSync(join(directory, "node_modules", "connector-dryrun-kit", "package.json"), "utf8"));
+  if (installedManifest.bin?.["connector-dryrun"] !== "bin/connector-dryrun.js") {
+    throw new Error(`installed package bin metadata was ${JSON.stringify(installedManifest.bin)}`);
+  }
 
   const imported = execFileSync("node", [
     "--input-type=module",
@@ -77,7 +101,7 @@ try {
     throw new Error("installed CLI did not render the fixture receipt");
   }
 
-  console.log(`package smoke ok: ${pack.filename} includes ${pack.files.length} files, exposes its library API, and its installed bin renders fixtures`);
+  console.log(`package smoke ok: publish metadata is stable; ${pack.filename} includes ${pack.files.length} files, exposes its library API, and its installed bin renders fixtures`);
 } finally {
   rmSync(directory, { recursive: true, force: true });
   rmSync(packagePath, { force: true });
