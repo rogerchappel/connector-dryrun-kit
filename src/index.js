@@ -148,28 +148,29 @@ function riskRank(risk) {
 
 export function renderMarkdown(receipt) {
   const lines = [
-    `# Dry-Run Receipt: ${receipt.name}`,
+    `# Dry-Run Receipt: ${markdownLiteral(receipt.name)}`,
     '',
-    `Owner: ${receipt.owner}`,
+    `Owner: ${markdownLiteral(receipt.owner)}`,
     `Generated: ${receipt.generatedAt}`,
     `Highest risk: ${receipt.highestRisk}`,
     `Approval required: ${receipt.approvalRequired ? 'yes' : 'no'}`,
     ''
   ];
 
-  if (receipt.summary) lines.push('## Summary', '', receipt.summary, '');
+  if (receipt.summary) lines.push('## Summary', '', markdownLiteral(receipt.summary), '');
   lines.push('## Actions', '');
   for (const action of receipt.actions) {
     lines.push(
-      `### ${action.id}`,
+      `### ${markdownLiteral(action.id)}`,
       '',
-      `- Connector: ${action.connector}`,
-      `- Verb: ${action.verb}`,
-      `- Target: ${action.target}`,
+      `- Connector: ${markdownLiteral(action.connector)}`,
+      `- Verb: ${markdownLiteral(action.verb)}`,
+      `- Target: ${markdownLiteral(action.target)}`,
       `- Risk: ${action.risk}`,
       `- Approval required: ${action.approvalRequired ? 'yes' : 'no'}`,
-      `- Approver: ${action.approver ?? 'not assigned'}`,
-      `- Rollback: ${action.rollback ?? 'not supplied'}`,
+      `- Approver: ${markdownLiteral(action.approver ?? 'not assigned')}`,
+      `- Rollback: ${markdownLiteral(action.rollback ?? 'not supplied')}`,
+      `- Notes: ${markdownLiteral(action.notes || 'none')}`,
       ''
     );
   }
@@ -182,8 +183,16 @@ export function renderMarkdown(receipt) {
 function appendList(lines, title, items) {
   if (items.length === 0) return;
   lines.push(`## ${title}`, '');
-  for (const item of items) lines.push(`- ${item}`);
+  for (const item of items) lines.push(`- ${markdownLiteral(item)}`);
   lines.push('');
+}
+
+function markdownLiteral(value) {
+  return String(value)
+    .replace(/[\r\n\u2028\u2029]+/gu, ' ')
+    .replace(/\s+/gu, ' ')
+    .trim()
+    .replace(/([\\`*_{}\[\]<>()#!|])/gu, '\\$1');
 }
 
 export function renderJson(receipt) {

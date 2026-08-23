@@ -51,6 +51,37 @@ test('renders json receipts from the fixture plan', async () => {
   assert.equal(receipt.highestRisk, 'high');
 });
 
+test('keeps multiline Markdown punctuation literal in CLI output', async (t) => {
+  const directory = await mkdtemp(join(tmpdir(), 'connector-dryrun-cli-'));
+  t.after(() => rm(directory, { recursive: true, force: true }));
+  const planPath = join(directory, 'literal-markdown.json');
+  await writeFile(planPath, JSON.stringify({
+    name: 'demo\n## injected',
+    owner: '*owner*',
+    summary: '[summary](url)',
+    actions: [{
+      id: 'read\n### injected', connector: '`crm`', verb: 'read',
+      target: 'record\n- forged', risk: 'low', approver: '| admin |',
+      rollback: 'review\u2028> first', notes: '_note_\u2029next'
+    }]
+  }));
+
+  const markdown = await runCli([planPath, '--format', 'markdown']);
+  assert.equal(markdown.code, 0);
+  assert.match(markdown.stdout, /demo \\#\\# injected/);
+  assert.match(markdown.stdout, /Target: record - forged/);
+  assert.match(markdown.stdout, /Notes: \\_note\\_ next/);
+  assert.doesNotMatch(markdown.stdout, /^## injected$/m);
+  assert.doesNotMatch(markdown.stdout, /^- forged$/m);
+
+  const json = await runCli([planPath, '--format', 'json']);
+  assert.equal(json.code, 0);
+  const receipt = JSON.parse(json.stdout);
+  assert.equal(receipt.name, 'demo\n## injected');
+  assert.equal(receipt.actions[0].target, 'record\n- forged');
+  assert.equal(receipt.actions[0].notes, '_note_\u2029next');
+});
+
 test('returns validation exit code when a receipt has errors', async () => {
   const result = await runCli([invalidPlan, '--format', 'markdown']);
 
