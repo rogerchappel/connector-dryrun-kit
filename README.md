@@ -36,6 +36,12 @@ version, and fixture rendering. It does not publish the package.
 
 Plans are JSON files with `name`, `owner`, optional `summary`, and an `actions` array. Each action should include `id`, `connector`, `verb`, `target`, `risk`, `approver`, and `rollback`.
 
+Markdown receipts render plan-controlled values as literal, single-line text. Line
+separators and repeated whitespace are collapsed, and Markdown punctuation is
+escaped so values cannot introduce headings, lists, links, emphasis, code spans,
+or table structure. JSON receipts retain the normalized semantic field values
+without Markdown escaping.
+
 Plans and actions must be JSON objects. Verb and risk tokens are trimmed and
 lowercased, so casing or surrounding whitespace does not change approval policy.
 The accepted verbs are `read`, `create`, `update`, `delete`, `send`, `invite`,

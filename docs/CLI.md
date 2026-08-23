@@ -47,3 +47,9 @@ duplicate or conflicting options, and a missing `--format` value print a usage
 error to standard error and exit `1` before the plan file is read. The only
 supported format values are `markdown` and `json`; omitting `--format` selects
 `markdown`.
+
+Markdown output treats all plan-controlled values and validation findings as
+literal text: line separators and unsafe whitespace collapse to spaces, while
+Markdown punctuation is escaped. Embedded values therefore cannot create new
+headings, list entries, links, emphasis, code spans, or table cells. JSON output
+is not Markdown-escaped and preserves the receipt's normalized semantic values.
