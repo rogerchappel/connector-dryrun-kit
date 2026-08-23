@@ -208,6 +208,37 @@ test('renders markdown receipt', () => {
   assert.match(renderMarkdown(receipt), /Connector: slack/);
 });
 
+test('renders every plan-controlled value as single-line literal Markdown', () => {
+  const receipt = buildReceipt({
+    name: 'demo\n## forged',
+    owner: '[owner](https://example.test)',
+    summary: '*summary*\u2028| injected |',
+    actions: [{
+      id: 'one\r\n### forged',
+      connector: '`crm`',
+      verb: 'READ',
+      target: 'contact\n- Approval required: no',
+      risk: 'low',
+      approver: '**admin**',
+      rollback: 'use _snapshot_',
+      notes: 'line one\u2029> quote'
+    }]
+  });
+
+  const markdown = renderMarkdown(receipt);
+  assert.match(markdown, /^# Dry-Run Receipt: demo \\#\\# forged$/m);
+  assert.ok(markdown.split('\n').includes('Owner: \\[owner\\]\\(https://example.test\\)'));
+  assert.match(markdown, /^\\\*summary\\\* \\\| injected \\\|$/m);
+  assert.match(markdown, /^### one \\#\\#\\# forged$/m);
+  assert.match(markdown, /^- Target: contact - Approval required: no$/m);
+  assert.match(markdown, /^- Notes: line one \\> quote$/m);
+  assert.doesNotMatch(markdown, /^## forged$/m);
+
+  assert.deepEqual(JSON.parse(renderJson(receipt)), receipt);
+  assert.equal(receipt.name, 'demo\n## forged');
+  assert.equal(receipt.actions[0].notes, 'line one\u2029> quote');
+});
+
 test('summarizes plans without a usable actions collection conservatively', () => {
   for (const plan of [
     { name: 'missing', owner: 'tester' },
